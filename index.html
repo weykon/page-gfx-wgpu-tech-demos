@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebGPU Shader Demos</title>
+    <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
+</head>
+
+<body>
+    <div class="container mx-auto p-6 bg-gray-50 min-h-screen">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
+            <div class="aspect-square bg-gray-100 rounded-lg overflow-hidden flex items-center justify-center">
+                <canvas id="canvas-1" width="300" height="300" class="w-full h-full"></canvas>
+            </div>
+            <div class="aspect-square bg-gray-100 rounded-lg overflow-hidden flex items-center justify-center">
+                <canvas id="canvas-2" width="300" height="300" class="w-full h-full"></canvas>
+            </div>
+            <div class="aspect-square bg-gray-100 rounded-lg overflow-hidden flex items-center justify-center">
+                <canvas id="canvas-3" width="300" height="300" class="w-full h-full"></canvas>
+            </div>
+            <div class="aspect-square bg-gray-100 rounded-lg overflow-hidden flex items-center justify-center">
+                <canvas id="canvas-4" width="300" height="300" class="w-full h-full"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        async function init() {
+            if (!navigator.gpu) {
+                console.warn("use webgl")
+            } else {
+                console.log("use webgpu");
+                let wasm = await import('./pkg_webgpu/page_shader_tech.js');
+                console.log('got wasm', wasm);
+                await wasm.default();
+                wasm.start(
+                    ['canvas-1', 'canvas-2', 'canvas-3', 'canvas-4'].map((id) =>
+                        document.getElementById(id)
+                    )
+                );
+                console.log('wasm run done');
+            }
+        }
+        init();
+    </script>
+</body>
+
+</html>
