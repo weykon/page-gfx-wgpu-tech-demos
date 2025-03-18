@@ -4,12 +4,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WebGPU Shader Demos</title>
+    <title>WebGPU Structure And Shader Demos</title>
     <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
 </head>
 
 <body>
-    <div class="container mx-auto p-6 bg-gray-50 min-h-screen">
+    <div class="container mx-auto p-6 bg-gray-50 min-h-screen gap-6">
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
             <div class="aspect-square bg-gray-100 rounded-lg overflow-hidden flex items-center justify-center">
                 <canvas id="canvas-1" width="300" height="300" class="w-full h-full"></canvas>
@@ -22,6 +22,22 @@
             </div>
             <div class="aspect-square bg-gray-100 rounded-lg overflow-hidden flex items-center justify-center">
                 <canvas id="canvas-4" width="300" height="300" class="w-full h-full"></canvas>
+            </div>
+
+        </div>
+
+        <div class="flex flex-col gap-6 mt-6">
+            <div class="aspect-square bg-gray-100 rounded-lg flex items-center justify-center">
+                <canvas id="canvas-5" width="600" height="300" class="w-full h-full"></canvas>
+            </div>
+            <div class="aspect-square bg-gray-100 rounded-lg flex items-center justify-center">
+                <canvas id="canvas-6" width="600" height="300" class="w-full h-full"></canvas>
+            </div>
+            <div class="aspect-square bg-gray-100 rounded-lg flex items-center justify-center">
+                <canvas id="canvas-7" width="600" height="300" class="w-full h-full"></canvas>
+            </div>
+            <div class="aspect-square bg-gray-100 rounded-lg flex items-center justify-center">
+                <canvas id="canvas-8" width="600" height="300" class="w-full h-full"></canvas>
             </div>
         </div>
     </div>
@@ -36,7 +52,7 @@
                 console.log('got wasm', wasm);
                 await wasm.default();
                 wasm.start(
-                    ['canvas-1', 'canvas-2', 'canvas-3', 'canvas-4'].map((id) =>
+                    ['canvas-1', 'canvas-2', 'canvas-3', 'canvas-4', 'canvas-5', 'canvas-6'].map((id) =>
                         document.getElementById(id)
                     )
                 );

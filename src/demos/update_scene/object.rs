@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::{num::NonZero, sync::Arc};
 
 use crate::{
     console_log,
@@ -7,16 +7,20 @@ use crate::{
     },
 };
 use glam::Mat4;
-use wgpu::{util::DeviceExt, Surface};
+use wgpu::{util::DeviceExt, PipelineCompilationOptions, Surface};
 
 use super::world::World;
 
 #[derive(Default)]
 pub struct Tetrahedron {
-    vertices: Option<[[f32; 3]; 4]>,
-    object_buffer: Option<wgpu::Buffer>,
-    object_line_index_buffer: Option<wgpu::Buffer>,
-    pipeline: Option<wgpu::RenderPipeline>,
+    pub vertices: Option<[[f32; 3]; 4]>,
+    pub object_buffer: Option<wgpu::Buffer>,
+    pub object_line_index_buffer: Option<wgpu::Buffer>,
+    pub pipeline: Option<wgpu::RenderPipeline>,
+    pub triangle_list_pipeline: Option<wgpu::RenderPipeline>,
+    pub object_triangle_list_index_buffer: Option<wgpu::Buffer>,
+    pub triangle_list_depth_texture_view: Option<wgpu::TextureView>,
+    pub world_pipeline_layout: Option<wgpu::PipelineLayout>,
 }
 
 impl Ready for Tetrahedron {
@@ -51,6 +55,15 @@ impl Ready for Tetrahedron {
                     contents: bytemuck::cast_slice(&[0u16, 1, 1, 2, 2, 0, 0, 3, 1, 3, 2, 3]),
                     usage: wgpu::BufferUsages::INDEX,
                 });
+
+        let object_triangle_list_index_buffer =
+            gfx.device
+                .create_buffer_init(&wgpu::util::BufferInitDescriptor {
+                    label: Some("Object Triangle List Index Buffer"),
+                    contents: bytemuck::cast_slice(&[0u16, 1, 2, 0, 2, 3, 0, 3, 1, 1, 3, 2]),
+                    usage: wgpu::BufferUsages::INDEX,
+                });
+
         let shader = gfx
             .device
             .create_shader_module(wgpu::ShaderModuleDescriptor {
@@ -67,6 +80,103 @@ impl Ready for Tetrahedron {
                     push_constant_ranges: &[],
                 });
 
+        let vertex_layout_ref = &[vertex_layout];
+
+        let triangle_list_depth_texture = gfx.device.create_texture(&wgpu::TextureDescriptor {
+            label: Some("Triangle List Depth Texture"),
+            size: wgpu::Extent3d {
+                width: 600,
+                height: 300,
+                depth_or_array_layers: 1,
+            },
+            mip_level_count: 1,
+            sample_count: 1,
+            dimension: wgpu::TextureDimension::D2,
+            format: wgpu::TextureFormat::Depth24Plus,
+            usage: wgpu::TextureUsages::RENDER_ATTACHMENT | wgpu::TextureUsages::TEXTURE_BINDING,
+            view_formats: &[],
+        });
+        let triangle_list_depth_texture_view =
+            triangle_list_depth_texture.create_view(&wgpu::TextureViewDescriptor::default());
+
+        let triangle_list_pipeline =
+            gfx.device
+                .create_render_pipeline(&wgpu::RenderPipelineDescriptor {
+                    label: Some("Triangle List Pipeline"),
+                    layout: Some(&world_pipeline_layout),
+                    vertex: wgpu::VertexState {
+                        module: &shader,
+                        entry_point: Some("vs_main"),
+                        buffers: vertex_layout_ref,
+                        compilation_options: PipelineCompilationOptions::default(),
+                    },
+                    fragment: Some(wgpu::FragmentState {
+                        module: &shader,
+                        entry_point: Some("fs_main"),
+                        targets: &[Some(wgpu::ColorTargetState {
+                            format: wgpu::TextureFormat::Bgra8Unorm,
+                            blend: Some(wgpu::BlendState::REPLACE),
+                            write_mask: wgpu::ColorWrites::ALL,
+                        })],
+                        compilation_options: PipelineCompilationOptions::default(),
+                    }),
+                    primitive: wgpu::PrimitiveState {
+                        topology: wgpu::PrimitiveTopology::TriangleList,
+                        front_face: wgpu::FrontFace::Cw,
+                        cull_mode: Some(wgpu::Face::Back),
+                        ..Default::default()
+                    },
+                    depth_stencil: Some(wgpu::DepthStencilState {
+                        format: wgpu::TextureFormat::Depth24Plus,
+                        depth_write_enabled: true,
+                        depth_compare: wgpu::CompareFunction::Less,
+                        stencil: Default::default(),
+                        bias: Default::default(),
+                    }),
+                    multisample: wgpu::MultisampleState::default(),
+                    multiview: None,
+                    cache: None,
+                });
+
+        let triangle_list_vr_pipeline =
+            gfx.device
+                .create_render_pipeline(&wgpu::RenderPipelineDescriptor {
+                    label: Some("Triangle List VR Pipeline"),
+                    layout: Some(&world_pipeline_layout),
+                    vertex: wgpu::VertexState {
+                        module: &shader,
+                        entry_point: Some("vs_main"),
+                        buffers: vertex_layout_ref,
+                        compilation_options: PipelineCompilationOptions::default(),
+                    },
+                    fragment: Some(wgpu::FragmentState {
+                        module: &shader,
+                        entry_point: Some("fs_main"),
+                        targets: &[Some(wgpu::ColorTargetState {
+                            format: wgpu::TextureFormat::Bgra8Unorm,
+                            blend: Some(wgpu::BlendState::REPLACE),
+                            write_mask: wgpu::ColorWrites::ALL,
+                        })],
+                        compilation_options: PipelineCompilationOptions::default(),
+                    }),
+                    primitive: wgpu::PrimitiveState {
+                        topology: wgpu::PrimitiveTopology::TriangleList,
+                        front_face: wgpu::FrontFace::Cw,
+                        cull_mode: Some(wgpu::Face::Back),
+                        ..Default::default()
+                    },
+                    depth_stencil: Some(wgpu::DepthStencilState {
+                        format: wgpu::TextureFormat::Depth24Plus,
+                        depth_write_enabled: true,
+                        depth_compare: wgpu::CompareFunction::Less,
+                        stencil: Default::default(),
+                        bias: Default::default(),
+                    }),
+                    multisample: wgpu::MultisampleState::default(),
+                    multiview: NonZero::new(2 as u32),
+                    cache: None,
+                });
+
         let object_pipeline = gfx
             .device
             .create_render_pipeline(&wgpu::RenderPipelineDescriptor {
@@ -75,7 +185,7 @@ impl Ready for Tetrahedron {
                 vertex: wgpu::VertexState {
                     module: &shader,
                     entry_point: Some("vs_main"),
-                    buffers: &[vertex_layout],
+                    buffers: vertex_layout_ref,
                     compilation_options: Default::default(),
                 },
                 fragment: Some(wgpu::FragmentState {
@@ -102,6 +212,10 @@ impl Ready for Tetrahedron {
                 object_buffer: Some(object_buffer),
                 object_line_index_buffer: Some(object_line_index_buffer),
                 pipeline: Some(object_pipeline),
+                triangle_list_pipeline: Some(triangle_list_pipeline),
+                object_triangle_list_index_buffer: Some(object_triangle_list_index_buffer),
+                triangle_list_depth_texture_view: Some(triangle_list_depth_texture_view),
+                world_pipeline_layout: Some(world_pipeline_layout),
             },
         );
     }

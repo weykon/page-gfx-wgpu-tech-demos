@@ -48,6 +48,8 @@ pub fn split<'a>(
 pub fn split_for_update<'a>(
     canvas_id_name: &'a String,
     shared: Arc<Shared>,
+    width: u32,
+    height: u32,
 ) -> (
     Arc<wgpu::Adapter>,
     Arc<wgpu::Queue>,
@@ -67,7 +69,7 @@ pub fn split_for_update<'a>(
         .clone();
     let surface = arc_surface.clone();
 
-    let default_config = surface.get_default_config(&adapter, 300, 300).unwrap();
+    let default_config = surface.get_default_config(&adapter, width, height).unwrap();
     surface.configure(&device, &default_config);
 
     (adapter, queue, surface)

@@ -79,7 +79,7 @@ pub fn return_res<T: Any + 'static>(data: &mut HashMap<TypeId, Box<dyn Any>>, ne
 
 pub struct Scene {
     name: String,
-    res: HashMap<TypeId, Box<dyn Any>>,
+    pub res: HashMap<TypeId, Box<dyn Any>>,
     readys: Vec<TypeId>,
     paints: Vec<TypeId>,
     readys_hashmap: HashMap<TypeId, Box<dyn FnMut(&mut HashMap<TypeId, Box<dyn Any>>, &Gfx)>>,

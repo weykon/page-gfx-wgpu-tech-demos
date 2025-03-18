@@ -7,6 +7,7 @@ use std::{
 
 use once_cell::sync::Lazy;
 use paint::PaintScene;
+use triangle_list_render::NormalTriangleListRender;
 use wasm_bindgen::{prelude::Closure, JsCast};
 
 use crate::{
@@ -26,18 +27,28 @@ impl Queue for UpdateScene {
     fn introduce(scene: &mut Scene) {
         scene
             .add_ready(world::World::default())
-            .add_ready(object::Tetrahedron::default());
+            .add_ready(object::Tetrahedron::default())
+            .add_ready(NormalTriangleListRender::default());
         scene.add_paint::<PaintScene>();
     }
 }
 
 impl UpdateScene {
-    pub fn run(canvas_id: &String, shared: Arc<Shared>) {
+    pub fn run(shared: Arc<Shared>) {
         console_log!("UpdateScene::run");
         let mut scene = Scene::new("update_scene".to_string());
         let shared_clone = shared.clone();
-        let canvas_id = canvas_id.clone();
-        let (adapter, queue, surface) = split_for_update(&"canvas-3".to_string(), shared_clone);
+
+        // get surfaces
+        let (adapter, queue, surface) =
+            split_for_update(&"canvas-3".to_string(), shared_clone, 300, 300);
+        let (_, _, side_surface) =
+            split_for_update(&"canvas-4".to_string(), shared.clone(), 300, 300);
+        let (_, _, triangle_list_surface) =
+            split_for_update(&"canvas-5".to_string(), shared.clone(), 600, 300);
+        let (_, _, triangle_list_normal_surface) =
+            split_for_update(&"canvas-6".to_string(), shared.clone(), 600, 300);
+
         let f = Rc::new(RefCell::new(None::<Closure<dyn FnMut()>>));
         let g = f.clone();
 
@@ -48,6 +59,13 @@ impl UpdateScene {
         }
         UpdateScene::introduce(&mut scene);
         scene.ready(&shared);
+
+        PaintScene::merge_surface(
+            &mut scene.res,
+            &side_surface,
+            &triangle_list_surface,
+            &triangle_list_normal_surface,
+        );
         scene.paint(&shared, 0.016, &surface); // 执行初始渲染
 
         let mut time = Time::new();
@@ -95,3 +113,5 @@ impl UpdateScene {
             .expect("Failed to request animation frame");
     }
 }
+
+mod triangle_list_render;

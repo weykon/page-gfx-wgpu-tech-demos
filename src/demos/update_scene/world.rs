@@ -15,6 +15,8 @@ pub struct World {
     uniforms_bind_group: Option<wgpu::BindGroup>,
     uniforms: Option<Uniforms>,
     side_view_uniforms: Option<Uniforms>, // 侧视角uniform数据
+    side_view_uniform_buffer: Option<wgpu::Buffer>, // 侧视角uniform buffer
+    side_view_uniforms_bind_group: Option<wgpu::BindGroup>,
 }
 
 impl Ready for World {
@@ -76,7 +78,16 @@ impl Ready for World {
                 resource: uniform_buffer.as_entire_binding(),
             }],
         });
-
+        // 创建侧视角绑定组
+        let side_view_uniforms_bind_group =
+            gfx.device.create_bind_group(&wgpu::BindGroupDescriptor {
+                label: Some("side_view_uniforms_bind_group"),
+                layout: &uniforms_bind_group_layout,
+                entries: &[wgpu::BindGroupEntry {
+                    binding: 0,
+                    resource: side_view_uniform_buffer.as_entire_binding(),
+                }],
+            });
         return_res(
             data,
             World {
@@ -84,6 +95,9 @@ impl Ready for World {
                 uniforms_bind_group_layout: Some(uniforms_bind_group_layout),
                 uniforms_bind_group: Some(uniforms_bind_group),
                 uniforms: Some(uniforms),
+                side_view_uniforms: Some(side_view_uniforms),
+                side_view_uniform_buffer: Some(side_view_uniform_buffer),
+                side_view_uniforms_bind_group: Some(side_view_uniforms_bind_group),
             },
         );
     }
@@ -123,11 +137,12 @@ pub fn generate_matrix(aspect_ratio: f32) -> glam::Mat4 {
 
 // create a side camera view orhtographic matrix
 pub fn generate_orthographic_matrix(aspect_ratio: f32) -> glam::Mat4 {
-    let projection = glam::Mat4::orthographic_rh(-1.0, 1.0, -1.0, 1.0, 1.0, 10.0);
+    let projection = glam::Mat4::orthographic_rh(-2.0, 2.0, -2.0, 2.0, 0.1, 20.0);
+    // 从侧面（X轴）看向原点
     let view = glam::Mat4::look_at_rh(
-        glam::Vec3::new(1.5f32, -5.0, 3.0),
-        glam::Vec3::ZERO,
-        glam::Vec3::Z,
+        glam::Vec3::new(-5.0, 0.0, 0.0), // 从Y轴负方向看
+        glam::Vec3::ZERO,                // 看向原点
+        glam::Vec3::Y,                   // 上方向是Z轴
     );
     projection * view
 }
@@ -140,6 +155,28 @@ impl<'a> Pass<'a> for World {
         let world = get_res::<World>(data);
         let uniforms_bind_group = world.uniforms_bind_group.as_ref().unwrap();
         render_pass.set_bind_group(0, uniforms_bind_group, &[]);
+        render_pass
+    }
+}
+
+impl World {
+    pub fn update_side_view_uniforms(data: &mut HashTypeId2Data, dt: f32, gfx: &Gfx) {
+        let world = get_res_mut::<Self>(data);
+        const DELTA_TIME_OFFSET: wgpu::BufferAddress = 72;
+        world.side_view_uniforms.as_mut().unwrap().delta_time = dt;
+        gfx.queue.write_buffer(
+            &world.side_view_uniform_buffer.as_ref().unwrap(),
+            DELTA_TIME_OFFSET,
+            bytemuck::cast_slice(&[dt]),
+        );
+    }
+    pub fn pass_for_side_view<'a>(
+        data: &mut HashTypeId2Data,
+        mut render_pass: wgpu::RenderPass<'a>,
+    ) -> wgpu::RenderPass<'a> {
+        let world = get_res::<World>(data);
+        let side_view_uniforms_bind_group = world.side_view_uniforms_bind_group.as_ref().unwrap();
+        render_pass.set_bind_group(0, side_view_uniforms_bind_group, &[]);
         render_pass
     }
 }

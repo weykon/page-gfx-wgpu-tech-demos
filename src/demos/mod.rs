@@ -33,6 +33,6 @@ impl Demo {
         });
 
         console_log!("run_all end");
-        UpdateScene::run(&"canvas-3".to_string(), shared.clone());
+        UpdateScene::run(shared.clone());
     }
 }
