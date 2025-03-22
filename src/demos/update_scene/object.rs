@@ -85,7 +85,7 @@ impl Ready for Tetrahedron {
         let triangle_list_depth_texture = gfx.device.create_texture(&wgpu::TextureDescriptor {
             label: Some("Triangle List Depth Texture"),
             size: wgpu::Extent3d {
-                width: 600,
+                width: 300,
                 height: 300,
                 depth_or_array_layers: 1,
             },
@@ -135,45 +135,6 @@ impl Ready for Tetrahedron {
                     }),
                     multisample: wgpu::MultisampleState::default(),
                     multiview: None,
-                    cache: None,
-                });
-
-        let triangle_list_vr_pipeline =
-            gfx.device
-                .create_render_pipeline(&wgpu::RenderPipelineDescriptor {
-                    label: Some("Triangle List VR Pipeline"),
-                    layout: Some(&world_pipeline_layout),
-                    vertex: wgpu::VertexState {
-                        module: &shader,
-                        entry_point: Some("vs_main"),
-                        buffers: vertex_layout_ref,
-                        compilation_options: PipelineCompilationOptions::default(),
-                    },
-                    fragment: Some(wgpu::FragmentState {
-                        module: &shader,
-                        entry_point: Some("fs_main"),
-                        targets: &[Some(wgpu::ColorTargetState {
-                            format: wgpu::TextureFormat::Bgra8Unorm,
-                            blend: Some(wgpu::BlendState::REPLACE),
-                            write_mask: wgpu::ColorWrites::ALL,
-                        })],
-                        compilation_options: PipelineCompilationOptions::default(),
-                    }),
-                    primitive: wgpu::PrimitiveState {
-                        topology: wgpu::PrimitiveTopology::TriangleList,
-                        front_face: wgpu::FrontFace::Cw,
-                        cull_mode: Some(wgpu::Face::Back),
-                        ..Default::default()
-                    },
-                    depth_stencil: Some(wgpu::DepthStencilState {
-                        format: wgpu::TextureFormat::Depth24Plus,
-                        depth_write_enabled: true,
-                        depth_compare: wgpu::CompareFunction::Less,
-                        stencil: Default::default(),
-                        bias: Default::default(),
-                    }),
-                    multisample: wgpu::MultisampleState::default(),
-                    multiview: NonZero::new(2 as u32),
                     cache: None,
                 });
 

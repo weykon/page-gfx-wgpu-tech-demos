@@ -7,7 +7,9 @@ use std::{
 
 use once_cell::sync::Lazy;
 use paint::PaintScene;
+use shadow::ShadowScene;
 use triangle_list_render::NormalTriangleListRender;
+use vr::VRScene;
 use wasm_bindgen::{prelude::Closure, JsCast};
 
 use crate::{
@@ -22,13 +24,17 @@ use crate::{
 pub struct UpdateScene {}
 mod object;
 mod paint;
+mod shadow;
 mod world;
 impl Queue for UpdateScene {
     fn introduce(scene: &mut Scene) {
         scene
             .add_ready(world::World::default())
             .add_ready(object::Tetrahedron::default())
-            .add_ready(NormalTriangleListRender::default());
+            .add_ready(ShadowScene::default())
+            .add_ready(NormalTriangleListRender::default())
+            .add_ready(ShadowScene::default());
+        // .add_ready(VRScene::default());
         scene.add_paint::<PaintScene>();
     }
 }
@@ -45,9 +51,13 @@ impl UpdateScene {
         let (_, _, side_surface) =
             split_for_update(&"canvas-4".to_string(), shared.clone(), 300, 300);
         let (_, _, triangle_list_surface) =
-            split_for_update(&"canvas-5".to_string(), shared.clone(), 600, 300);
+            split_for_update(&"canvas-5".to_string(), shared.clone(), 300, 300);
         let (_, _, triangle_list_normal_surface) =
-            split_for_update(&"canvas-6".to_string(), shared.clone(), 600, 300);
+            split_for_update(&"canvas-6".to_string(), shared.clone(), 300, 300);
+        let (_, _, vrscene_surface) =
+            split_for_update(&"canvas-7".to_string(), shared.clone(), 300, 300);
+        let (_, _, shadow_surface) =
+            split_for_update(&"canvas-8".to_string(), shared.clone(), 300, 300);
 
         let f = Rc::new(RefCell::new(None::<Closure<dyn FnMut()>>));
         let g = f.clone();
@@ -65,6 +75,8 @@ impl UpdateScene {
             &side_surface,
             &triangle_list_surface,
             &triangle_list_normal_surface,
+            &vrscene_surface,
+            &shadow_surface, // Add shadow surface
         );
         scene.paint(&shared, 0.016, &surface); // 执行初始渲染
 
@@ -115,3 +127,4 @@ impl UpdateScene {
 }
 
 mod triangle_list_render;
+mod vr;

@@ -12,7 +12,7 @@ use crate::shared::ready_paint::{
 pub struct World {
     uniform_buffer: Option<wgpu::Buffer>,
     pub uniforms_bind_group_layout: Option<wgpu::BindGroupLayout>,
-    uniforms_bind_group: Option<wgpu::BindGroup>,
+    pub uniforms_bind_group: Option<wgpu::BindGroup>,
     uniforms: Option<Uniforms>,
     side_view_uniforms: Option<Uniforms>, // 侧视角uniform数据
     side_view_uniform_buffer: Option<wgpu::Buffer>, // 侧视角uniform buffer
@@ -22,17 +22,17 @@ pub struct World {
 impl Ready for World {
     fn ready(&mut self, data: &mut HashTypeId2Data, gfx: &Gfx) {
         println!("world ready");
-        let world = generate_matrix(600. / 400.);
+        let world = generate_matrix(300. / 300.);
         let uniforms = Uniforms {
-            resolution: [600., 400.],
+            resolution: [300., 300.],
             matrix: world.to_cols_array(),
             delta_time: 0.,
             _padding: 0.,
         };
         // 侧视角（正交投影）
-        let side_view_matrix = generate_orthographic_matrix(600. / 400.);
+        let side_view_matrix = generate_orthographic_matrix(300. / 300.);
         let side_view_uniforms = Uniforms {
-            resolution: [600., 400.],
+            resolution: [300., 300.],
             matrix: side_view_matrix.to_cols_array(),
             delta_time: 0.,
             _padding: 0.,

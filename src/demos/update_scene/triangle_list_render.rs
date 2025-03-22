@@ -105,7 +105,7 @@ impl Ready for NormalTriangleListRender {
         let indices: [u16; 12] = [0, 1, 2, 0, 2, 3, 0, 3, 1, 1, 3, 2];
 
         // 生成带法线和颜色的顶点
-        let (colored_vertices, _) = generate_colored_vertices(&vertices, &indices);
+        let (colored_vertices, _) = generate_colored_vertices(&vertices, &indices, true);
 
         let triangle_list_normal_indices_buffer =
             gfx.device
@@ -117,7 +117,7 @@ impl Ready for NormalTriangleListRender {
         let triangle_list_normal_texture = gfx.device.create_texture(&wgpu::TextureDescriptor {
             label: Some("Triangle List Normal Texture"),
             size: wgpu::Extent3d {
-                width: 600,
+                width: 300,
                 height: 300,
                 depth_or_array_layers: 1,
             },
@@ -237,6 +237,7 @@ struct ColoredVertex {
 fn generate_colored_vertices(
     vertices: &[[f32; 3]; 4],
     indices: &[u16],
+    white: bool,
 ) -> (Vec<ColoredVertex>, Vec<u16>) {
     // 计算每个面的法线
     let face_normals = calculate_face_normals(vertices, indices);
@@ -245,7 +246,11 @@ fn generate_colored_vertices(
     let vertex_normals = calculate_vertex_normals(vertices, indices, &face_normals);
 
     // 生成颜色 (基于位置生成有趣的颜色)
-    let colors = gen_white_color(vertices);
+    let colors = if white {
+        gen_white_color(vertices)
+    } else {
+        generate_colors(vertices)
+    };
 
     // 创建彩色顶点
     let mut colored_vertices = Vec::with_capacity(vertices.len());
@@ -348,7 +353,7 @@ fn gen_white_color(vertices: &[[f32; 3]; 4]) -> Vec<[f32; 3]> {
     vec![[1.0, 1.0, 1.0]; vertices.len()]
 }
 // 生成颜色 (基于顶点位置)
-fn generate_colors(vertices: &[[f32; 3]; 4]) -> Vec<[f32; 3]> {
+pub fn generate_colors(vertices: &[[f32; 3]; 4]) -> Vec<[f32; 3]> {
     vertices
         .iter()
         .map(|v| {
@@ -397,7 +402,7 @@ fn vs_main(in: VertexInput) -> VertexOutput {
 @fragment
 fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
     // 简单的漫反射光照模型
-    let light_dir = normalize(vec3<f32>(0.5, -1.0, 0.7));
+    let light_dir = normalize(vec3<f32>(0.3, -1.0, 0.7));
     let normal = normalize(in.normal);
     
     // 计算漫反射系数
