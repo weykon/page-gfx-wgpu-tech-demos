@@ -46,7 +46,7 @@ pub fn split<'a>(
 }
 
 pub fn split_for_update<'a>(
-    canvas_id_name: &'a String,
+    canvas_id_name: &str,
     shared: Arc<Shared>,
     width: u32,
     height: u32,
@@ -55,6 +55,7 @@ pub fn split_for_update<'a>(
     Arc<wgpu::Queue>,
     Arc<wgpu::Surface<'static>>,
 ) {
+    console_log!("2 split_for_update");
     let device = shared.device.clone();
     let queue = shared.queue.clone();
     let adapter = shared.adapter.clone();
@@ -79,106 +80,71 @@ pub fn split_for_update<'a>(
 #[derive(Copy, Clone, Debug, bytemuck::Pod, bytemuck::Zeroable)]
 pub struct Vertex {
     pub position: [f32; 3],
-    pub color: [f32; 3],
-    pub normal: [f32; 3],
 }
-
-impl Vertex {
-    pub fn desc<'a>() -> wgpu::VertexBufferLayout<'a> {
-        wgpu::VertexBufferLayout {
-            array_stride: std::mem::size_of::<Vertex>() as wgpu::BufferAddress,
-            step_mode: wgpu::VertexStepMode::Vertex,
-            attributes: &[
-                // Position
-                wgpu::VertexAttribute {
-                    offset: 0,
-                    shader_location: 0,
-                    format: wgpu::VertexFormat::Float32x3,
-                },
-                // Color
-                wgpu::VertexAttribute {
-                    offset: std::mem::size_of::<[f32; 3]>() as wgpu::BufferAddress,
-                    shader_location: 1,
-                    format: wgpu::VertexFormat::Float32x3,
-                },
-                // Normal
-                wgpu::VertexAttribute {
-                    offset: std::mem::size_of::<[f32; 6]>() as wgpu::BufferAddress,
-                    shader_location: 2,
-                    format: wgpu::VertexFormat::Float32x3,
-                },
-            ],
-        }
-    }
-}
-
 pub struct CubeMesh {
     pub vertices: Vec<Vertex>,
     pub indices: Vec<u16>,
 }
 impl Default for CubeMesh {
     fn default() -> Self {
-        create_cube(2.0)
+        create_cube(1.)
     }
 }
 pub fn create_cube(size: f32) -> CubeMesh {
     let half = size / 2.0;
 
+    //                    0 -------> 1
+    //                   |           |
+    //                7 -|--------4  |
+    //                |  |        |  |
+    //                |  |        |  |
+    //                |  3 --------> 2
+    //                |           |
+    //                6 ----------5
+
     // Define the 8 vertices of the cube
     let vertices = vec![
-        // Front face
-        Vertex {
-            position: [-half, -half, half],
-            color: [1.0, 0.0, 0.0],
-            normal: [0.0, 0.0, 1.0],
-        }, // 0
-        Vertex {
-            position: [half, -half, half],
-            color: [0.0, 1.0, 0.0],
-            normal: [0.0, 0.0, 1.0],
-        }, // 1
-        Vertex {
-            position: [half, half, half],
-            color: [0.0, 0.0, 1.0],
-            normal: [0.0, 0.0, 1.0],
-        }, // 2
-        Vertex {
-            position: [-half, half, half],
-            color: [1.0, 1.0, 0.0],
-            normal: [0.0, 0.0, 1.0],
-        }, // 3
-        // Back face
-        Vertex {
-            position: [-half, -half, -half],
-            color: [1.0, 0.0, 1.0],
-            normal: [0.0, 0.0, -1.0],
-        }, // 4
-        Vertex {
-            position: [half, -half, -half],
-            color: [0.0, 1.0, 1.0],
-            normal: [0.0, 0.0, -1.0],
-        }, // 5
-        Vertex {
-            position: [half, half, -half],
-            color: [1.0, 1.0, 1.0],
-            normal: [0.0, 0.0, -1.0],
-        }, // 6
         Vertex {
             position: [-half, half, -half],
-            color: [0.5, 0.5, 0.5],
-            normal: [0.0, 0.0, -1.0],
-        }, // 7
+        },
+        Vertex {
+            position: [half, half, -half],
+        },
+        Vertex {
+            position: [half, -half, -half],
+        },
+        Vertex {
+            position: [-half, -half, -half],
+        },
+        Vertex {
+            position: [half, half, half],
+        },
+        Vertex {
+            position: [half, -half, half],
+        },
+        Vertex {
+            position: [-half, -half, half],
+        },
+        Vertex {
+            position: [-half, half, half],
+        },
     ];
-
+    //                    0 -------> 1
+    //                   |           |
+    //                7 -|--------4  |
+    //                |  |        |  |
+    //                |  |        |  |
+    //                |  3 --------> 2
+    //                |           |
+    //                6 ----------5
     // Define the indices for the triangles (12 triangles, 6 faces)
     let indices = vec![
-        // Front face
-        0, 1, 2, 2, 3, 0, // Back face
-        4, 7, 6, 6, 5, 4, // Right face
-        1, 5, 6, 6, 2, 1, // Left face
-        4, 0, 3, 3, 7, 4, // Top face
-        3, 2, 6, 6, 7, 3, // Bottom face
-        4, 5, 1, 1, 0, 4,
+        7, 4, 5, 5, 6, 7, // front
+        5, 4, 2, 2, 4, 1, // right
+        0, 1, 4, 4, 7, 0, // top
+        2, 1, 0, 0, 3, 2, // back
+        3, 0, 7, 7, 6, 3, // left
+        3, 6, 5, 5, 2, 3, // bottom
     ];
 
     CubeMesh { vertices, indices }
@@ -224,3 +190,4 @@ impl Time {
         self.frame_count as f32 / self.elapsed
     }
 }
+ 

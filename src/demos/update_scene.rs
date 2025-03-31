@@ -19,13 +19,14 @@ use crate::{
         Shared,
     },
     utils::{create_cube, split, split_for_update, CubeMesh, Time},
+    APP_INSTANCE,
 };
 
 pub struct UpdateScene {}
 mod object;
 mod paint;
 mod shadow;
-mod world;
+pub mod world;
 impl Queue for UpdateScene {
     fn introduce(scene: &mut Scene) {
         scene
@@ -33,31 +34,27 @@ impl Queue for UpdateScene {
             .add_ready(object::Tetrahedron::default())
             .add_ready(ShadowScene::default())
             .add_ready(NormalTriangleListRender::default())
-            .add_ready(ShadowScene::default());
+            .add_ready(VRScene::default())
+            .add_ready(ShadowScene::default())
+            .add_ready(VRScene::default());
         // .add_ready(VRScene::default());
         scene.add_paint::<PaintScene>();
     }
 }
 
 impl UpdateScene {
-    pub fn run(shared: Arc<Shared>) {
+    pub fn run(shared: Arc<Shared>, page_active: Rc<RefCell<bool>>) {
         console_log!("UpdateScene::run");
         let mut scene = Scene::new("update_scene".to_string());
-        let shared_clone = shared.clone();
 
         // get surfaces
-        let (adapter, queue, surface) =
-            split_for_update(&"canvas-3".to_string(), shared_clone, 300, 300);
-        let (_, _, side_surface) =
-            split_for_update(&"canvas-4".to_string(), shared.clone(), 300, 300);
-        let (_, _, triangle_list_surface) =
-            split_for_update(&"canvas-5".to_string(), shared.clone(), 300, 300);
+        let (adapter, queue, surface) = split_for_update(&"canvas-3", shared.clone(), 300, 300);
+        let (_, _, side_surface) = split_for_update(&"canvas-4", shared.clone(), 300, 300);
+        let (_, _, triangle_list_surface) = split_for_update(&"canvas-5", shared.clone(), 300, 300);
         let (_, _, triangle_list_normal_surface) =
-            split_for_update(&"canvas-6".to_string(), shared.clone(), 300, 300);
-        let (_, _, vrscene_surface) =
-            split_for_update(&"canvas-7".to_string(), shared.clone(), 300, 300);
-        let (_, _, shadow_surface) =
-            split_for_update(&"canvas-8".to_string(), shared.clone(), 300, 300);
+            split_for_update(&"canvas-6", shared.clone(), 300, 300);
+        let (_, _, vrscene_surface) = split_for_update(&"canvas-7", shared.clone(), 600, 300);
+        let (_, _, shadow_surface) = split_for_update(&"canvas-8", shared.clone(), 300, 300);
 
         let f = Rc::new(RefCell::new(None::<Closure<dyn FnMut()>>));
         let g = f.clone();
@@ -67,6 +64,7 @@ impl UpdateScene {
             shared.configs.borrow_mut().push(default_config);
             console_log!("Config count: {}", shared.configs.borrow().len());
         }
+
         UpdateScene::introduce(&mut scene);
         scene.ready(&shared);
 
@@ -76,7 +74,7 @@ impl UpdateScene {
             &triangle_list_surface,
             &triangle_list_normal_surface,
             &vrscene_surface,
-            &shadow_surface, // Add shadow surface
+            &shadow_surface,
         );
         scene.paint(&shared, 0.016, &surface); // 执行初始渲染
 
@@ -92,6 +90,14 @@ impl UpdateScene {
         let mut render_fps: f32 = 0.0;
 
         *g.borrow_mut() = Some(Closure::wrap(Box::new(move || {
+            if !*page_active.borrow() {
+                console_log!("Page not active");
+                // web_sys::window()
+                //     .unwrap()
+                //     .request_animation_frame(f.borrow().as_ref().unwrap().as_ref().unchecked_ref())
+                //     .expect("Failed to request animation frame");
+                return;
+            }
             let now = time.performance.now() as f32;
             let dt = (now - time.last_frame_time).min(100.0);
             time.last_frame_time = now;

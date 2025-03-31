@@ -1,24 +1,58 @@
+use std::cell::RefCell;
 use std::sync::Arc;
 
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
 use web_sys::{console, window, Event};
 
+use crate::APP_INSTANCE;
+
+thread_local! {
+    static NEXT_LEVEL: RefCell<bool> = RefCell::new(false);
+}
+
 #[wasm_bindgen]
 pub fn init_interactions() -> Result<(), JsValue> {
-    // 获取当前窗口中的文档对象
     let doc = window().unwrap().document().unwrap();
-    // 获取页面上 id 为 "my_button" 的按钮元素
     let button = doc
-        .get_element_by_id("my_button")
-        .expect("Element with id `my_button` not found");
-    // 创建一个闭包，用于监听点击事件
+        .get_element_by_id("button")
+        .expect("Element with id `button` not found");
+
+    let restore_button = doc
+        .get_element_by_id("restore-layout-btn")
+        .expect("Element with id `restore_button` not found");
+
     let closure = Closure::wrap(Box::new(move |_: Event| {
-        console::log_1(&"Button clicked!".into());
+        let level2 = NEXT_LEVEL.with(|next_level| *next_level.borrow());
+        if level2 {
+            console::log_1(&"Level 2".into());
+            APP_INSTANCE.with(|app_instance| {
+                let app_instance = app_instance.borrow();
+                let app_instance = app_instance.as_ref().expect("App instance not found");
+                let mut app_instance = app_instance.borrow_mut();
+                app_instance.next_level();
+            })
+        } else {
+            console::log_1(&"Level 1".into());
+            APP_INSTANCE.with(|app_instance| {
+                let app_instance = app_instance.borrow();
+                let app_instance = app_instance.as_ref().expect("App instance not found");
+                let mut app_instance = app_instance.borrow_mut();
+                app_instance.return_level1();
+            });
+        }
     }) as Box<dyn FnMut(_)>);
-    // 将闭包的引用注册为按钮点击事件的回调函数
     button.add_event_listener_with_callback("click", closure.as_ref().unchecked_ref())?;
-    // 忘却该闭包，避免被回收
+    restore_button.add_event_listener_with_callback("click", closure.as_ref().unchecked_ref())?;
     closure.forget();
     Ok(())
+}
+
+#[wasm_bindgen]
+pub fn toggle_level() -> bool {
+    NEXT_LEVEL.with(|next_level| {
+        let mut next_level = next_level.borrow_mut();
+        *next_level = !*next_level;
+        *next_level
+    })
 }

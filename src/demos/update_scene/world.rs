@@ -10,7 +10,7 @@ use crate::shared::ready_paint::{
 
 #[derive(Default)]
 pub struct World {
-    uniform_buffer: Option<wgpu::Buffer>,
+    pub uniform_buffer: Option<wgpu::Buffer>,
     pub uniforms_bind_group_layout: Option<wgpu::BindGroupLayout>,
     pub uniforms_bind_group: Option<wgpu::BindGroup>,
     uniforms: Option<Uniforms>,

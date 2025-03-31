@@ -5,64 +5,123 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WebGPU Structure And Shader Demos</title>
-    <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
 </head>
 
 <body>
-    <div class="container mx-auto p-6 bg-gray-50 min-h-screen gap-6">
-        <h1 class="text-3xl font-bold text-center mb-8 text-gray-800">WebGPU Shader Demonstrations</h1>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
-            <div class="aspect-square bg-gray-100 rounded-lg overflow-hidden flex flex-col">
-                <div class="bg-gray-200 p-2 text-center font-medium text-gray-700">Basic Shader</div>
-                <div class="flex-1 flex items-center justify-center">
-                    <canvas id="canvas-1" width="300" height="300" class="w-full h-full"></canvas>
-                </div>
-            </div>
-            <div class="aspect-square bg-gray-100 rounded-lg overflow-hidden flex flex-col">
-                <div class="bg-gray-200 p-2 text-center font-medium text-gray-700">Color Gradient</div>
-                <div class="flex-1 flex items-center justify-center">
-                    <canvas id="canvas-2" width="300" height="300" class="w-full h-full"></canvas>
-                </div>
-            </div>
-            <div class="aspect-square bg-gray-100 rounded-lg overflow-hidden flex flex-col">
-                <div class="bg-gray-200 p-2 text-center font-medium text-gray-700">Main Surface Demo</div>
-                <div class="flex-1 flex items-center justify-center">
-                    <canvas id="canvas-3" width="300" height="300" class="w-full h-full"></canvas>
-                </div>3            </div>
-            <div class="aspect-square bg-gray-100 rounded-lg overflow-hidden flex flex-col">
-                <div class="bg-gray-200 p-2 text-center font-medium text-gray-700">Side Surface</div>
-                <div class="flex-1 flex items-center justify-center">
-                    <canvas id="canvas-4" width="300" height="300" class="w-full h-full"></canvas>
-                </div>
-            </div>
-        </div>
+    <style>
+        .canvas-container,
+        .container,
+        .grid {
+            transition: all 0.5s ease-in-out;
+        }
 
-        <div class="flex flex-col gap-6 mt-6">
-            <div class="bg-gray-100 rounded-lg overflow-hidden flex flex-col">
-                <div class="bg-gray-200 p-2 text-center font-medium text-gray-700">Triangle List Surface</div>
-                <div class="flex-1 flex items-center justify-center aspect-[2/1]">
-                    <canvas id="canvas-5" width="300" height="300" class="w-full h-full"></canvas>
+        .canvas-container.hidden {
+            opacity: 0;
+            height: 0;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+
+        /* 添加脉冲动画 */
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        .animate-pulse {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+    </style>
+    <div class="container mx-auto p-6 bg-gray-50 min-h-screen gap-6 max-w-7xl">
+        <h1 class="text-3xl font-bold text-center mb-8 text-gray-800">WebGPU Scene (wgpu code)</h1>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
+            <div
+                class="canvas-container aspect-square bg-gray-100 rounded-lg overflow-hidden flex flex-col max-w-lg mx-auto w-full">
+                <div class=" bg-gray-200 p-2 text-center font-medium text-gray-700">Basic Shader</div>
+                <div class="flex-1 flex items-center justify-center">
+                    <canvas id="canvas-1" width="800" height="600"
+                        class="w-full h-full max-h-[800px] max-w-[600px]"></canvas>
                 </div>
             </div>
-            <div class="bg-gray-100 rounded-lg overflow-hidden flex flex-col">
-                <div class="bg-gray-200 p-2 text-center font-medium text-gray-700">Triangle List Normal</div>
-                <div class="flex-1 flex items-center justify-center aspect-[2/1]">
-                    <canvas id="canvas-6" width="300" height="300" class="w-full h-full"></canvas>
+            <div
+                class="canvas-container aspect-square bg-gray-100 rounded-lg overflow-hidden flex flex-col max-w-lg mx-auto w-full">
+                <div class=" bg-gray-200 p-2 text-center font-medium text-gray-700">Color Gradient</div>
+                <div class="flex-1 flex items-center justify-center">
+                    <canvas id="canvas-2" width="300" height="300"
+                        class="w-full h-full max-h-[500px] max-w-[500px]"></canvas>
                 </div>
             </div>
-            <div class="bg-gray-100 rounded-lg overflow-hidden flex flex-col">
-                <div class="bg-gray-200 p-2 text-center font-medium text-gray-700">VR Scene Rendering</div>
-                <div class="flex-1 flex items-center justify-center aspect-[2/1]">
-                    <canvas id="canvas-7" width="300" height="300" class="w-full h-full"></canvas>
+            <div
+                class="canvas-container aspect-square bg-gray-100 rounded-lg overflow-hidden flex flex-col max-w-lg mx-auto w-full">
+                <div class=" bg-gray-200 p-2 text-center font-medium text-gray-700">Main Surface Demo
+                </div>
+                <div class="flex-1 flex items-center justify-center">
+                    <canvas id="canvas-3" width="300" height="300" class="w-full h-full max-h-[500px] max-w-[500px]">
+                    </canvas>
                 </div>
             </div>
-            <div class="bg-gray-100 rounded-lg overflow-hidden flex flex-col">
-                <div class="bg-gray-200 p-2 text-center font-medium text-gray-700">Shadow Mapping</div>
-                <div class="flex-1 flex items-center justify-center aspect-[2/1]">
-                    <canvas id="canvas-8" width="300" height="300" class="w-full h-full"></canvas>
+            <div
+                class="canvas-container aspect-square bg-gray-100 rounded-lg overflow-hidden flex flex-col max-w-lg mx-auto w-full">
+                <div class=" bg-gray-200 p-2 text-center font-medium text-gray-700">Side Surface</div>
+                <div class="flex-1 flex items-center justify-center">
+                    <canvas id="canvas-4" width="300" height="300" class="w-full h-full max-h-[500px] max-w-[500px]">
+                    </canvas>
+                </div>
+            </div>
+            <div
+                class="canvas-container aspect-square bg-gray-100 rounded-lg overflow-hidden flex flex-col max-w-lg mx-auto w-full">
+                <div class=" bg-gray-200 p-2 text-center font-medium text-gray-700">Triangle List
+                    Surface</div>
+                <div class="flex-1 flex items-center justify-center">
+                    <canvas id="canvas-5" width="300" height="300"
+                        class="w-full h-full max-h-[500px] max-w-[500px]"></canvas>
+                </div>
+            </div>
+            <div
+                class="canvas-container aspect-square bg-gray-100 rounded-lg overflow-hidden flex flex-col max-w-lg mx-auto w-full">
+                <div class=" bg-gray-200 p-2 text-center font-medium text-gray-700">Triangle List Normal
+                </div>
+                <div class="flex-1 flex items-center justify-center">
+                    <canvas id="canvas-6" width="300" height="300"
+                        class="w-full h-full max-h-[500px] max-w-[500px]"></canvas>
+                </div>
+            </div>
+            <div
+                class="canvas-container aspect-square bg-gray-100 rounded-lg overflow-hidden flex flex-col max-w-lg mx-auto w-full">
+                <div class=" bg-gray-200 p-2 text-center font-medium text-gray-700">Depth Texture</div>
+                <div class="flex-1 flex items-center justify-center">
+                    <canvas id="canvas-8" width="300" height="300"
+                        class="w-full h-full max-h-[500px] max-w-[500px]"></canvas>
                 </div>
             </div>
         </div>
+        <div
+            class="canvas-container vr-container bg-gray-100 rounded-lg overflow-hidden flex flex-col max-w-lg mx-auto w-full">
+            <div class=" bg-gray-200 p-2 text-center font-medium text-gray-700">VR Scene Rendering</div>
+            <div class="flex-1 flex items-center justify-center">
+                <canvas id="canvas-7" width="600" height="300"
+                    class="w-full h-full max-h-[500px] max-w-[1000px]"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="fixed bottom-4 right-4 flex flex-col gap-2">
+        <button id="button" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+            next level
+        </button>
+        <button id="restore-layout-btn"
+            class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded hidden">
+            Restore Layout
+        </button>
     </div>
 
     <script type="module">
@@ -81,11 +140,140 @@
                         document.getElementById(id)
                     )
                 );
+
+                toggle_layout(wasm.toggle_level);
                 console.log('wasm run done');
             }
         }
+
+        function toggle_layout(toggle) {
+            const toggleButton = document.getElementById('button');
+            const restoreButton = document.getElementById('restore-layout-btn');
+            const container = document.querySelector('.container');
+            const grid = document.querySelector('.grid');
+            const canvasContainers = document.querySelectorAll('.canvas-container');
+
+            const vrContainer = document.querySelector('.vr-container');
+
+            // 检查元素是否找到
+            console.log('Toggle button found:', toggleButton);
+            console.log('Grid found:', grid);
+            console.log('Canvas containers found:', canvasContainers.length);
+            console.log('VR container found:', vrContainer);
+            // 保存原始布局信息
+            const originalLayout = {
+                containerClasses: container.className,
+                gridClasses: grid.className,
+                canvasContainers: Array.from(canvasContainers).map(container => {
+                    const titleElement = container.querySelector('.bg-gray-200');
+                    return {
+                        element: container,
+                        classes: container.className,
+                        visible: true,
+                        titleContent: titleElement ? titleElement.innerHTML : '' // 保存原始标题HTML内容
+                    };
+                }),
+                vrContainer: {
+                    element: vrContainer,
+                    classes: vrContainer.className,
+                    visible: true
+                }
+            };
+
+            // 切换到只显示 canvas-1 和 canvas-2 的布局
+            toggleButton.addEventListener('click', function () {
+                let b = toggle();
+                console.log("toggleButton.addEventListener('click',", b);
+                // 隐藏不需要的画布容器
+                canvasContainers.forEach((container, index) => {
+                    if (index > 1) { // 只保留前两个 (canvas-1 和 canvas-2)
+                        container.classList.add('hidden');
+                    } else {
+                        // 调整保留的画布大小
+                        container.className = 'canvas-container bg-gray-100 rounded-lg overflow-hidden flex flex-col w-full mx-auto';
+                        container.style.maxWidth = '800px';
+                        container.style.height = '600px';
+                    }
+                });
+                const firstContainer = canvasContainers[0];
+                const firstTitle = firstContainer.querySelector('.bg-gray-200');
+                if (firstTitle) {
+                    firstTitle.textContent = 'Shadow Scene';
+                }
+                const second = canvasContainers[1];
+                const secondTitle = second.querySelector('.bg-gray-200');
+                if (secondTitle) {
+                    // 创建一个包含标题和徽章的容器
+                    const titleContainer = document.createElement('div');
+                    titleContainer.className = 'flex items-center justify-center';
+
+                    // 主标题
+                    const mainTitle = document.createElement('span');
+                    mainTitle.textContent = 'Ray Tracing Scene';
+
+                    // 创建徽章
+                    const comingSoonBadge = document.createElement('span');
+                    comingSoonBadge.className = 'ml-2 inline-block bg-yellow-500 text-xs text-white px-2 py-1 rounded-full animate-pulse';
+                    comingSoonBadge.textContent = '开发中，请期待';
+
+                    // 组装标题容器
+                    titleContainer.appendChild(mainTitle);
+                    titleContainer.appendChild(comingSoonBadge);
+
+                    // 清空原始标题并添加新的标题容器
+                    secondTitle.innerHTML = '';
+                    secondTitle.appendChild(titleContainer);
+                }
+
+                canvasContainers[0].style.maxWidth = '800px';
+
+                // 隐藏 VR 容器
+                vrContainer.classList.add('hidden');
+
+                // 修改网格布局
+                grid.className = 'flex flex-col gap-8';
+
+                // 调整容器
+                container.className = 'container mx-auto p-6 bg-gray-50 min-h-screen flex flex-col gap-8';
+
+                // 切换按钮显示
+                toggleButton.classList.add('hidden');
+                restoreButton.classList.remove('hidden');
+            });
+
+            // 恢复原始布局
+            restoreButton.addEventListener('click', function () {
+                let b = toggle();
+                console.log("restoreButton.addEventListener('click',", b);
+                // 恢复容器类
+                container.className = originalLayout.containerClasses;
+                grid.className = originalLayout.gridClasses;
+
+                // 恢复画布容器
+                originalLayout.canvasContainers.forEach(item => {
+                    item.element.className = item.classes;
+                    item.element.style.maxWidth = '';
+                    item.element.style.height = '';
+
+                    // 恢复原始标题内容
+                    const titleElement = item.element.querySelector('.bg-gray-200');
+                    if (titleElement && item.titleContent) {
+                        titleElement.innerHTML = item.titleContent;
+                    }
+                });
+
+                // 恢复 VR 容器
+                originalLayout.vrContainer.element.className = originalLayout.vrContainer.classes;
+
+                // 切换按钮显示
+                toggleButton.classList.remove('hidden');
+                restoreButton.classList.add('hidden');
+            });
+        }
+
         init();
     </script>
+
 </body>
 
 </html>

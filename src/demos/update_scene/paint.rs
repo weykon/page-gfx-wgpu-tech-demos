@@ -2,6 +2,7 @@ use super::{
     object::Tetrahedron,
     shadow::ShadowScene,
     triangle_list_render::{NormalTriangleListRender, TriangleListRender},
+    vr::VRScene,
     world::World,
 };
 use crate::shared::ready_paint::{
@@ -44,7 +45,7 @@ impl Paint for PaintScene {
             .create_command_encoder(&wgpu::CommandEncoderDescriptor::default());
 
         // surface
-        let side_surface = get_res::<Self>(data).side_surface.clone();
+        let side_surface: Arc<Surface<'_>> = get_res::<Self>(data).side_surface.clone();
         let triangle_list_surface = get_res::<Self>(data).triangle_list_surface.clone();
         let triangle_list_normal_surface =
             get_res::<Self>(data).triangle_list_normal_surface.clone();
@@ -89,7 +90,7 @@ impl Paint for PaintScene {
         let _ = World::update(data, gfx, dt, surface);
         let _ = Tetrahedron::update(data, gfx, dt, surface);
         let _ = NormalTriangleListRender::update(data, gfx, dt, surface);
-        // let _ = VRScene::update(data, gfx, dt, surface);
+        let _ = VRScene::update(data, gfx, dt, surface);
 
         // 主视角
         {
@@ -212,29 +213,6 @@ impl Paint for PaintScene {
             let mut rpass = World::pass(data, rpass);
             let mut rpass = NormalTriangleListRender::pass(data, rpass);
         }
-        // vrscene
-        {
-            // let mut rpass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
-            //     label: None,
-            //     color_attachments: &[Some(wgpu::RenderPassColorAttachment {
-            //         view: &vrscene_view,
-            //         resolve_target: None,
-            //         ops: wgpu::Operations {
-            //             load: wgpu::LoadOp::Clear(wgpu::Color {
-            //                 r: 0.1,
-            //                 g: 0.2,
-            //                 b: 0.3,
-            //                 a: 1.0,
-            //             }),
-            //             store: wgpu::StoreOp::Store,
-            //         },
-            //     })],
-            //     depth_stencil_attachment: None,
-            //     timestamp_writes: None,
-            //     occlusion_query_set: None,
-            // });
-            // let mut rpass = VRScene::pass(data, rpass);
-        }
 
         // shadow
         // 第一个通道：渲染阴影深度贴图
@@ -292,12 +270,44 @@ impl Paint for PaintScene {
 
             let _render_pass = ShadowScene::pass(data, render_pass);
         }
+        // vr
+        let vr_scene = get_res::<VRScene>(data);
+        {
+            let mut rpass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
+                label: None,
+                color_attachments: &[Some(wgpu::RenderPassColorAttachment {
+                    view: &vrscene_view,
+                    resolve_target: None,
+                    ops: wgpu::Operations {
+                        load: wgpu::LoadOp::Clear(wgpu::Color {
+                            r: 0.0,
+                            g: 0.0,
+                            b: 0.0,
+                            a: 1.0,
+                        }),
+                        store: wgpu::StoreOp::Store,
+                    },
+                })],
+                depth_stencil_attachment: None,
+                //  Some(wgpu::RenderPassDepthStencilAttachment {
+                //     view: vr_scene.depth_texture_view.as_ref().unwrap(), // 使用深度纹理视图
+                //     depth_ops: Some(wgpu::Operations {
+                //         load: wgpu::LoadOp::Clear(1.0),
+                //         store: wgpu::StoreOp::Store,
+                //     }),
+                //     stencil_ops: None,
+                // }),
+                timestamp_writes: None,
+                occlusion_query_set: None,
+            });
+            let mut rpass = VRScene::pass(data, rpass);
+        }
         gfx.queue.submit(Some(encoder.finish()));
         frame.present();
         side_frame.present();
         triangle_list_frame.present();
         triangle_list_normal_frame.present();
-        // vrscene_frame.present();
         shadow_frame.present();
+        vrscene_frame.present();
     }
 }
