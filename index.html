@@ -6,10 +6,108 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WebGPU Structure And Shader Demos</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-</head>
-
-<body>
     <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f0f0;
+            color: #333;
+        }
+
+        #app {
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            position: relative;
+            z-index: 1;
+            flex-direction: column;
+        }
+
+        canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        #webgpu-not-supported {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+            color: white;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 20px;
+            z-index: 1000;
+            box-sizing: border-box;
+        }
+
+        .message-box {
+            background-color: #333;
+            border-radius: 8px;
+            padding: 30px;
+            max-width: 600px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+            border: 1px solid #555;
+        }
+
+        /* 修改后 */
+        #webgpu-not-supported h1 {
+            font-size: 28px;
+            margin-bottom: 20px;
+            color: #ff5555;
+        }
+
+        p {
+            font-size: 16px;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+
+        .browser-icons {
+            display: flex;
+            justify-content: center;
+            margin-top: 30px;
+            gap: 20px;
+        }
+
+        .browser-icons div {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .browser-icons img {
+            width: 48px;
+            height: 48px;
+            margin-bottom: 8px;
+        }
+
+        .browser-name {
+            font-size: 14px;
+        }
+
+        .more-info {
+            margin-top: 30px;
+            font-size: 14px;
+            color: #aaa;
+        }
+
+        .more-info a {
+            color: #7cb5ff;
+            text-decoration: none;
+        }
+
+        .more-info a:hover {
+            text-decoration: underline;
+        }
+
         .canvas-container,
         .container,
         .grid {
@@ -24,7 +122,6 @@
             overflow: hidden;
         }
 
-        /* 添加脉冲动画 */
         @keyframes pulse {
 
             0%,
@@ -40,7 +137,109 @@
         .animate-pulse {
             animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
         }
+
+        /* Fallback notice styling */
+        #webgl-fallback {
+            display: none;
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 16px 24px;
+            border-radius: 8px;
+            z-index: 1000;
+            max-width: 90%;
+            width: 500px;
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+            animation: slide-up 0.5s ease-out;
+        }
+
+        #webgl-fallback p {
+            margin: 0;
+        }
+
+        .badge {
+            display: inline-block;
+            background-color: #4CAF50;
+            color: white;
+            padding: 4px 8px;
+            font-size: 12px;
+            border-radius: 4px;
+            margin: 0 4px;
+        }
+
+        @keyframes slide-up {
+            from {
+                opacity: 0;
+                transform: translate(-50%, 50px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translate(-50%, 0);
+            }
+        }
     </style>
+</head>
+
+<body>
+    <div id="webgpu-not-supported">
+        <div class="message-box">
+            <h1>WebGPU Not Supported / 不支持 WebGPU</h1>
+            <p>Your browser doesn't support WebGPU, which is required to run this application.</p>
+            <p>您的浏览器不支持 WebGPU，而该技术是运行此应用程序所必需的。</p>
+            <p>Please try one of these WebGPU-compatible browsers:</p>
+            <p>请尝试使用以下支持 WebGPU 的浏览器：</p>
+
+            <div class="browser-icons">
+                <div>
+                    <img src="https://cdn.jsdelivr.net/gh/PapirusDevelopmentTeam/papirus-icon-theme@master/Papirus/64x64/apps/google-chrome.svg"
+                        alt="Chrome">
+                    <span class="browser-name">Chrome 113+</span>
+                </div>
+                <div>
+                    <img src="https://cdn.jsdelivr.net/gh/PapirusDevelopmentTeam/papirus-icon-theme@master/Papirus/64x64/apps/firefox.svg"
+                        alt="Firefox">
+                    <span class="browser-name">Firefox 110+<br>(Nightly)</span>
+                </div>
+                <div>
+                    <img src="https://cdn.jsdelivr.net/gh/PapirusDevelopmentTeam/papirus-icon-theme@master/Papirus/64x64/apps/microsoft-edge.svg"
+                        alt="Edge">
+                    <span class="browser-name">Edge 113+</span>
+                </div>
+            </div>
+
+            <div class="more-info">
+                <p>For more information about WebGPU support, visit <a href="https://caniuse.com/webgpu"
+                        target="_blank">Can I use WebGPU?</a></p>
+                <p>有关 WebGPU 支持的更多信息，请访问 <a href="https://caniuse.com/webgpu" target="_blank">Can I use WebGPU?</a></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- WebGL Fallback Notice -->
+    <div id="webgl-fallback">
+        <p>
+            <span>WebGL support is currently under development.</span>
+            <span class="badge animate-pulse">Coming Soon</span>
+            <br>
+            <span>WebGL 支持正在开发中，敬请期待。</span>
+            <span class="badge animate-pulse">即将推出</span>
+        </p>
+    </div>
+
+    <a href="https://github.com/weykon/page-gfx-wgpu-tech-demos.git" target="_blank" rel="noopener noreferrer"
+        class="fixed top-4 right-4 flex items-center gap-2 bg-gray-800 text-white px-3 py-2 rounded-lg hover:bg-gray-700 transition-colors duration-200 z-10 shadow-lg">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+            <path
+                d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
+        </svg>
+        <span class="hidden md:block">View on GitHub</span>
+    </a>
+
     <div class="container mx-auto p-6 bg-gray-50 min-h-screen gap-6 max-w-7xl">
         <h1 class="text-3xl font-bold text-center mb-8 text-gray-800">WebGPU Scene (wgpu code)</h1>
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
@@ -52,6 +251,15 @@
                         class="w-full h-full max-h-[800px] max-w-[600px]"></canvas>
                 </div>
             </div>
+            <div id="gif-container"
+                class="hidden aspect-square bg-gray-100 rounded-lg overflow-hidden flex flex-col max-w-lg mx-auto w-full">
+                <a href="https://github.com/weykon/spatial-hashing-0"
+                    class=" bg-gray-200 p-2 text-center font-medium text-gray-700">https://github.com/weykon/spatial-hashing-0
+                </a>
+                <img class="flex-1 flex items-center justify-center"
+                    src="https://github.com/weykon/spatial-hashing-0/raw/main/preview.gif">
+                </img>
+            </div>
             <div
                 class="canvas-container aspect-square bg-gray-100 rounded-lg overflow-hidden flex flex-col max-w-lg mx-auto w-full">
                 <div class=" bg-gray-200 p-2 text-center font-medium text-gray-700">Color Gradient</div>
@@ -60,6 +268,7 @@
                         class="w-full h-full max-h-[500px] max-w-[500px]"></canvas>
                 </div>
             </div>
+
             <div
                 class="canvas-container aspect-square bg-gray-100 rounded-lg overflow-hidden flex flex-col max-w-lg mx-auto w-full">
                 <div class=" bg-gray-200 p-2 text-center font-medium text-gray-700">Main Surface Demo
@@ -104,12 +313,13 @@
                 </div>
             </div>
         </div>
-        <div
-            class="canvas-container vr-container bg-gray-100 rounded-lg overflow-hidden flex flex-col max-w-lg mx-auto w-full">
-            <div class=" bg-gray-200 p-2 text-center font-medium text-gray-700">VR Scene Rendering</div>
-            <div class="flex-1 flex items-center justify-center">
-                <canvas id="canvas-7" width="600" height="300"
-                    class="w-full h-full max-h-[500px] max-w-[1000px]"></canvas>
+        <div class="mt-8">
+            <div class="canvas-container vr-container bg-gray-100 rounded-lg overflow-hidden flex flex-col mx-auto w-full"
+                style="max-width: min(calc(100vw - 3rem), 1024px);">
+                <div class="bg-gray-200 p-2 text-center font-medium text-gray-700">VR Scene Rendering</div>
+                <div class="flex-1 flex items-center justify-center">
+                    <canvas id="canvas-7" width="600" height="300" class="w-full h-full"></canvas>
+                </div>
             </div>
         </div>
     </div>
@@ -126,9 +336,41 @@
 
     <script type="module">
         async function init() {
+            const notSupportedElement = document.getElementById('webgpu-not-supported');
+            const webglFallbackElement = document.getElementById('webgl-fallback');
+            // 确保初始状态是隐藏的
+            notSupportedElement.style.display = 'none';
+            webglFallbackElement.style.display = 'none';
+
             if (!navigator.gpu) {
-                console.warn("use webgl")
-            } else {
+                console.error('WebGPU is not supported in this browser');
+
+                // Show WebGL fallback notice alongside the WebGPU not supported message
+                notSupportedElement.style.display = 'flex';
+                webglFallbackElement.style.display = 'block';
+
+                // Hide WebGL notice after 10 seconds
+                setTimeout(() => {
+                    webglFallbackElement.style.opacity = '0';
+                    setTimeout(() => {
+                        webglFallbackElement.style.display = 'none';
+                    }, 500);
+                }, 1000);
+
+                return false;
+            }
+
+            try {
+                const adapter = await navigator.gpu.requestAdapter();
+                if (!adapter) {
+                    console.error('No appropriate GPUAdapter found');
+                    notSupportedElement.style.display = 'flex';
+                    webglFallbackElement.style.display = 'block';
+                    return false;
+                }
+
+                notSupportedElement.remove();
+                webglFallbackElement.remove();
                 console.log("use webgpu");
                 let wasm = await import('./pkg_webgpu/page_shader_tech.js');
                 console.log('got wasm', wasm);
@@ -143,6 +385,11 @@
 
                 toggle_layout(wasm.toggle_level);
                 console.log('wasm run done');
+            } catch (error) {
+                console.error('Error initializing WebGPU:', error);
+                notSupportedElement.style.display = 'flex';
+                webglFallbackElement.style.display = 'block';
+                return false;
             }
         }
 
@@ -154,13 +401,13 @@
             const canvasContainers = document.querySelectorAll('.canvas-container');
 
             const vrContainer = document.querySelector('.vr-container');
+            const gifContainer = document.getElementById('gif-container');
 
-            // 检查元素是否找到
             console.log('Toggle button found:', toggleButton);
             console.log('Grid found:', grid);
             console.log('Canvas containers found:', canvasContainers.length);
             console.log('VR container found:', vrContainer);
-            // 保存原始布局信息
+
             const originalLayout = {
                 containerClasses: container.className,
                 gridClasses: grid.className,
@@ -170,7 +417,7 @@
                         element: container,
                         classes: container.className,
                         visible: true,
-                        titleContent: titleElement ? titleElement.innerHTML : '' // 保存原始标题HTML内容
+                        titleContent: titleElement ? titleElement.innerHTML : ''
                     };
                 }),
                 vrContainer: {
@@ -180,16 +427,14 @@
                 }
             };
 
-            // 切换到只显示 canvas-1 和 canvas-2 的布局
             toggleButton.addEventListener('click', function () {
                 let b = toggle();
                 console.log("toggleButton.addEventListener('click',", b);
-                // 隐藏不需要的画布容器
+
                 canvasContainers.forEach((container, index) => {
-                    if (index > 1) { // 只保留前两个 (canvas-1 和 canvas-2)
+                    if (index > 2) {
                         container.classList.add('hidden');
                     } else {
-                        // 调整保留的画布大小
                         container.className = 'canvas-container bg-gray-100 rounded-lg overflow-hidden flex flex-col w-full mx-auto';
                         container.style.maxWidth = '800px';
                         container.style.height = '600px';
@@ -200,78 +445,73 @@
                 if (firstTitle) {
                     firstTitle.textContent = 'Shadow Scene';
                 }
+                const thirdContainer = canvasContainers[2];
+                const thirdTitle = thirdContainer.querySelector('.bg-gray-200');
+                if (thirdTitle) {
+                    thirdTitle.textContent = 'Boid Compute Scene';
+                }
                 const second = canvasContainers[1];
                 const secondTitle = second.querySelector('.bg-gray-200');
                 if (secondTitle) {
-                    // 创建一个包含标题和徽章的容器
                     const titleContainer = document.createElement('div');
                     titleContainer.className = 'flex items-center justify-center';
 
-                    // 主标题
                     const mainTitle = document.createElement('span');
                     mainTitle.textContent = 'Ray Tracing Scene';
 
-                    // 创建徽章
                     const comingSoonBadge = document.createElement('span');
                     comingSoonBadge.className = 'ml-2 inline-block bg-yellow-500 text-xs text-white px-2 py-1 rounded-full animate-pulse';
                     comingSoonBadge.textContent = '开发中，请期待';
 
-                    // 组装标题容器
                     titleContainer.appendChild(mainTitle);
                     titleContainer.appendChild(comingSoonBadge);
 
-                    // 清空原始标题并添加新的标题容器
                     secondTitle.innerHTML = '';
                     secondTitle.appendChild(titleContainer);
                 }
 
                 canvasContainers[0].style.maxWidth = '800px';
 
-                // 隐藏 VR 容器
                 vrContainer.classList.add('hidden');
 
-                // 修改网格布局
                 grid.className = 'flex flex-col gap-8';
 
-                // 调整容器
                 container.className = 'container mx-auto p-6 bg-gray-50 min-h-screen flex flex-col gap-8';
 
-                // 切换按钮显示
                 toggleButton.classList.add('hidden');
                 restoreButton.classList.remove('hidden');
+                gifContainer.classList.remove('hidden');
             });
 
-            // 恢复原始布局
             restoreButton.addEventListener('click', function () {
                 let b = toggle();
                 console.log("restoreButton.addEventListener('click',", b);
-                // 恢复容器类
+
                 container.className = originalLayout.containerClasses;
                 grid.className = originalLayout.gridClasses;
 
-                // 恢复画布容器
                 originalLayout.canvasContainers.forEach(item => {
                     item.element.className = item.classes;
                     item.element.style.maxWidth = '';
                     item.element.style.height = '';
 
-                    // 恢复原始标题内容
                     const titleElement = item.element.querySelector('.bg-gray-200');
                     if (titleElement && item.titleContent) {
                         titleElement.innerHTML = item.titleContent;
                     }
                 });
 
-                // 恢复 VR 容器
                 originalLayout.vrContainer.element.className = originalLayout.vrContainer.classes;
 
-                // 切换按钮显示
                 toggleButton.classList.remove('hidden');
                 restoreButton.classList.add('hidden');
+                gifContainer.classList.add('hidden');
             });
         }
 
-        init();
+        document.addEventListener('DOMContentLoaded', () => {
+            init();
+        });
     </script>
 
 </body>

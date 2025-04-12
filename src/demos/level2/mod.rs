@@ -1,6 +1,7 @@
 use std::{cell::RefCell, collections::HashMap, rc::Rc, sync::Arc};
 
 use shadow::{depth_texture::DepthTexture, plane::ShadowPlane, world::World, ShadowScene};
+use spatial_hashing::entity::EntityRender;
 use wasm_bindgen::{
     prelude::{wasm_bindgen, Closure},
     JsCast,
@@ -22,6 +23,7 @@ pub struct NextLevelPage {
 struct Surfaces {
     shadow_surface: Arc<wgpu::Surface<'static>>,
     ray_tracing_surface: Arc<wgpu::Surface<'static>>,
+    spatial_hash_surface: Arc<wgpu::Surface<'static>>,
 }
 
 impl NextLevelPage {
@@ -33,6 +35,7 @@ impl NextLevelPage {
         let (adapter, queue, shadow_suface) =
             split_for_update(&"canvas-1", shared.clone(), 800, 600);
         let (_, _, ray_tracing_surface) = split_for_update(&"canvas-2", shared.clone(), 800, 600);
+        let (_, _, spatial_hash_surface) = split_for_update(&"canvas-3", shared.clone(), 800, 600);
 
         let mut page = NextLevelPage {
             time_wraper: TimeWraper::new(),
@@ -43,6 +46,7 @@ impl NextLevelPage {
             Surfaces {
                 shadow_surface: shadow_suface.clone(),
                 ray_tracing_surface,
+                spatial_hash_surface: spatial_hash_surface.clone(),
             },
         );
 
@@ -143,11 +147,13 @@ impl Queue for NextLevelPage {
             .add_ready(World::default())
             .add_ready(ShadowPlane::default())
             .add_ready(DepthTexture::default())
-            .add_ready(ShadowScene::default());
+            .add_ready(ShadowScene::default())
+            .add_ready(EntityRender::default());
         scene.add_paint::<union_paint::PaintLevel2>();
     }
 }
 
 mod ray_tracing;
 mod shadow;
+mod spatial_hashing;
 mod union_paint;
